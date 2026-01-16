@@ -1,3 +1,9 @@
+/**
+ * 分组管理 Composable
+ * 
+ * 提供分组数据的增删查功能
+ * 封装与 chrome.storage.local 的交互
+ */
 import { ref } from 'vue'
 import { storage } from '../../utils/storage'
 import type { Group } from '../../types'

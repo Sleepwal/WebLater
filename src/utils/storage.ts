@@ -1,3 +1,9 @@
+/**
+ * 存储工具模块
+ * 
+ * 封装 Chrome Extension Storage API，提供书签和分组数据的持久化存储
+ * 开发环境下使用 localStorage 作为 mock 存储进行调试
+ */
 import type { Bookmark, Group, StorageSchema } from '../types';
 
 const DEFAULT_GROUP_ID = 'default';
@@ -12,7 +18,6 @@ function generateUUID(): string {
   });
 }
 
-// 简单的环境检测
 const isDev = import.meta.env.MODE === 'development' && (typeof chrome === 'undefined' || !chrome.storage);
 
 let mockData: StorageSchema = {
@@ -23,7 +28,6 @@ let mockData: StorageSchema = {
 async function getData(): Promise<StorageSchema> {
   if (isDev) {
     console.log('Reading from mock storage');
-    // 从 localStorage 读取以持久化开发数据
     const local = localStorage.getItem('web-later-mock');
     if (local) {
       mockData = JSON.parse(local);
@@ -89,11 +93,10 @@ export const storage = {
   async deleteGroup(id: string): Promise<void> {
      if (id === DEFAULT_GROUP_ID) return;
      const data = await getData();
-     // 将该分组下的书签移动到默认分组
      const bookmarks = data.bookmarks.map(b => b.groupId === id ? { ...b, groupId: DEFAULT_GROUP_ID } : b);
      const groups = data.groups.filter(g => g.id !== id);
      await setData({ groups, bookmarks });
-  },
+   },
 
   async getGroups(): Promise<Group[]> {
     const data = await getData();

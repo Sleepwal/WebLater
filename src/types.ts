@@ -1,3 +1,9 @@
+/**
+ * 类型定义模块
+ * 
+ * 定义书签、分组和存储结构的数据类型
+ */
+
 export interface Bookmark {
   id: string;
   title: string;
