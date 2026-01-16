@@ -9,11 +9,9 @@ import BookmarkList from './components/BookmarkList.vue'
 const activeTab = ref<'save' | 'list'>('save')
 const selectedGroupId = ref('default')
 const filterGroupId = ref('all')
-const currentUrl = ref('')
-const currentTitle = ref('')
 
 const { saveBookmark } = useBookmarks()
-useCurrentTab()
+const { currentUrl, currentTitle } = useCurrentTab()
 
 async function handleSave() {
   if (!currentUrl.value || !currentTitle.value) return
