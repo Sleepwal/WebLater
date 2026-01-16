@@ -3,7 +3,7 @@
 一个轻量级的浏览器插件，帮助用户便捷地保存网页链接以便稍后阅读。
 
 ![Version](https://img.shields.io/badge/version-0.0.1-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+![License](https://img.shields.io/badge/license-GPL%20v3-green)
 ![Vue](https://img.shields.io/badge/Vue-3.4.19-brightgreen)
 ![Chrome Extension](https://img.shields.io/badge/Manifest-V3-orange)
 
@@ -165,7 +165,7 @@ pnpm run build
 
 ## 许可证
 
-[MIT License](./LICENSE.txt)
+[GNU General Public License v3](./LICENSE)
 
 ## 贡献
 
