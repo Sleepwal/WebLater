@@ -5,24 +5,43 @@ import { useCurrentTab } from './composables/useCurrentTab'
 import AppHeader from './components/AppHeader.vue'
 import SaveForm from './components/SaveForm.vue'
 import BookmarkList from './components/BookmarkList.vue'
+import Toast from './components/Toast.vue'
 
 const activeTab = ref<'save' | 'list'>('save')
 const selectedGroupId = ref('default')
 const filterGroupId = ref('all')
 
+const toastState = ref<{
+  show: boolean
+  message: string
+  type: 'success' | 'error'
+}>({
+  show: false,
+  message: '',
+  type: 'success'
+})
+
 const { saveBookmark } = useBookmarks()
 const { currentUrl, currentTitle } = useCurrentTab()
+
+function showToast(message: string, type: 'success' | 'error' = 'success') {
+  toastState.value = { show: true, message, type }
+}
 
 async function handleSave() {
   if (!currentUrl.value || !currentTitle.value) return
 
-  await saveBookmark({
-    title: currentTitle.value,
-    url: currentUrl.value,
-    groupId: selectedGroupId.value
-  })
-
-  activeTab.value = 'list'
+  try {
+    await saveBookmark({
+      title: currentTitle.value,
+      url: currentUrl.value,
+      groupId: selectedGroupId.value
+    })
+    showToast('保存成功')
+    activeTab.value = 'list'
+  } catch (error) {
+    showToast('保存失败', 'error')
+  }
 }
 </script>
 
@@ -31,6 +50,13 @@ async function handleSave() {
     <AppHeader
       :active-tab="activeTab"
       @change="activeTab = $event"
+    />
+
+    <Toast
+      v-if="toastState.show"
+      :message="toastState.message"
+      :type="toastState.type"
+      @close="toastState.show = false"
     />
 
     <main class="flex-1 overflow-y-auto p-4">
@@ -62,6 +88,7 @@ async function handleSave() {
       <BookmarkList
         v-else
         v-model:filter-group-id="filterGroupId"
+        @notify="showToast"
       />
     </main>
   </div>

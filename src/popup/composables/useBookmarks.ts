@@ -21,6 +21,11 @@ export function useBookmarks() {
     await loadBookmarks()
   }
 
+  async function updateBookmark(id: string, updates: Partial<Omit<Bookmark, 'id' | 'createdAt'>>) {
+    await storage.updateBookmark(id, updates)
+    await loadBookmarks()
+  }
+
   async function removeBookmark(id: string) {
     await storage.removeBookmark(id)
     await loadBookmarks()
@@ -30,6 +35,7 @@ export function useBookmarks() {
     bookmarks,
     loadBookmarks,
     saveBookmark,
+    updateBookmark,
     removeBookmark
   }
 }

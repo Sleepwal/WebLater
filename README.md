@@ -22,6 +22,8 @@
 - 支持按分组筛选
 - TailwindCSS 样式
 
+![image-20260120165617096](assets\image-20260120165617096.png)
+
 ## 技术栈
 
 - **包管理器**: [pnpm](https://pnpm.io/)

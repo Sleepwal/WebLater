@@ -72,6 +72,14 @@ export const storage = {
     return newBookmark;
   },
 
+  async updateBookmark(id: string, updates: Partial<Omit<Bookmark, 'id' | 'createdAt'>>): Promise<void> {
+    const data = await getData();
+    const bookmarks = data.bookmarks.map(b => 
+      b.id === id ? { ...b, ...updates } : b
+    );
+    await setData({ bookmarks });
+  },
+
   async removeBookmark(id: string): Promise<void> {
     const data = await getData();
     const bookmarks = data.bookmarks.filter(b => b.id !== id);

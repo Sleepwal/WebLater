@@ -10,10 +10,11 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'update:filterGroupId': [value: string]
+  (e: 'update:filterGroupId', value: string): void
+  (e: 'notify', message: string, type: 'success' | 'error'): void
 }>()
 
-const { bookmarks: allBookmarks, loadBookmarks, removeBookmark } = useBookmarks()
+const { bookmarks: allBookmarks, loadBookmarks, removeBookmark, updateBookmark } = useBookmarks()
 const { groups, loadGroups, getGroupName } = useGroups()
 
 const filteredBookmarks = computed(() => {
@@ -31,7 +32,21 @@ async function initData() {
 initData()
 
 async function handleDelete(id: string) {
-  await removeBookmark(id)
+  try {
+    await removeBookmark(id)
+    emit('notify', '删除成功', 'success')
+  } catch (error) {
+    emit('notify', '删除失败', 'error')
+  }
+}
+
+async function handleMove(id: string, newGroupId: string) {
+  try {
+    await updateBookmark(id, { groupId: newGroupId })
+    emit('notify', '移动成功', 'success')
+  } catch (error) {
+    emit('notify', '移动失败', 'error')
+  }
 }
 
 function openLink(url: string) {
@@ -61,8 +76,10 @@ function openLink(url: string) {
         :key="item.id"
         :item="item"
         :group-name="getGroupName(item.groupId)"
+        :groups="groups"
         @click="openLink"
         @delete="handleDelete"
+        @move="handleMove"
       />
     </div>
   </div>
