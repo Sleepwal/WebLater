@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { useBookmarks } from '../composables/useBookmarks'
 import { useGroups } from '../composables/useGroups'
-import { computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import GroupFilter from './GroupFilter.vue'
 import BookmarkItem from './BookmarkItem.vue'
+import GroupModal from './GroupModal.vue'
 
 const props = defineProps<{
   filterGroupId: string
@@ -16,6 +17,15 @@ const emit = defineEmits<{
 
 const { bookmarks: allBookmarks, loadBookmarks, removeBookmark, updateBookmark } = useBookmarks()
 const { groups, loadGroups, getGroupName } = useGroups()
+
+const isGroupModalOpen = ref(false)
+
+// 如果当前筛选的分组被删除了，重置筛选到“全部”
+watch(groups, (newGroups) => {
+  if (props.filterGroupId !== 'all' && !newGroups.find(g => g.id === props.filterGroupId)) {
+    emit('update:filterGroupId', 'all')
+  }
+}, { deep: true })
 
 const filteredBookmarks = computed(() => {
   let list = allBookmarks.value
@@ -64,6 +74,13 @@ function openLink(url: string) {
       :groups="groups"
       :filterGroupId="filterGroupId"
       @update:filterGroupId="emit('update:filterGroupId', $event)"
+      @manage="isGroupModalOpen = true"
+    />
+
+    <GroupModal
+      v-if="isGroupModalOpen"
+      @close="isGroupModalOpen = false"
+      @notify="(msg, type) => emit('notify', msg, type)"
     />
 
     <div v-if="filteredBookmarks.length === 0" class="text-center py-10 text-gray-400">

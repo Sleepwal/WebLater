@@ -22,6 +22,16 @@ export function useGroups() {
     return newGroup
   }
 
+  async function removeGroup(id: string) {
+    await storage.deleteGroup(id)
+    await loadGroups()
+  }
+
+  async function updateGroup(id: string, updates: Partial<Omit<Group, 'id'>>) {
+    await storage.updateGroup(id, updates)
+    await loadGroups()
+  }
+
   function getGroupName(id: string) {
     const g: Group | undefined = groups.value.find(g => g.id === id)
     return g ? g.name : 'Unknown'
@@ -31,6 +41,8 @@ export function useGroups() {
     groups,
     loadGroups,
     createGroup,
+    removeGroup,
+    updateGroup,
     getGroupName
   }
 }

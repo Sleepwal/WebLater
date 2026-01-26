@@ -97,7 +97,16 @@ export const storage = {
     await setData({ groups });
     return newGroup;
   },
-  
+
+  async updateGroup(id: string, updates: Partial<Omit<Group, 'id'>>): Promise<void> {
+    if (id === DEFAULT_GROUP_ID) return;
+    const data = await getData();
+    const groups = data.groups.map(g => 
+      g.id === id ? { ...g, ...updates } : g
+    );
+    await setData({ groups });
+  },
+
   async deleteGroup(id: string): Promise<void> {
      if (id === DEFAULT_GROUP_ID) return;
      const data = await getData();
