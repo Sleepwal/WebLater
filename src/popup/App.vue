@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useBookmarks } from './composables/useBookmarks'
 import { useCurrentTab } from './composables/useCurrentTab'
 import AppHeader from './components/AppHeader.vue'
@@ -21,8 +21,16 @@ const toastState = ref<{
   type: 'success'
 })
 
-const { saveBookmark } = useBookmarks()
+const { saveBookmark, bookmarks, loadBookmarks } = useBookmarks()
 const { currentUrl, currentTitle } = useCurrentTab()
+
+onMounted(() => {
+  loadBookmarks()
+})
+
+const isSaved = computed(() => {
+  return bookmarks.value.some(b => b.url === currentUrl.value)
+})
 
 function showToast(message: string, type: 'success' | 'error' = 'success') {
   toastState.value = { show: true, message, type }
@@ -63,6 +71,7 @@ async function handleSave() {
       <div v-if="activeTab === 'save'" class="space-y-4">
         <SaveForm
           v-model:selected-group-id="selectedGroupId"
+          :is-saved="isSaved"
           @save="handleSave"
         >
           <template #title>
