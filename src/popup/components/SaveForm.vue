@@ -79,9 +79,15 @@ function handleSave() {
 
     <button
       @click="handleSave"
-      class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
+      :disabled="isSaved"
+      class="w-full font-medium py-2.5 rounded-lg transition-all text-white"
+      :class="[
+        isSaved 
+          ? 'bg-gray-300 cursor-not-allowed' 
+          : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg active:scale-[0.98]'
+      ]"
     >
-      保存到稍后阅读
+      {{ isSaved ? '已保存' : '保存到稍后阅读' }}
     </button>
   </div>
 </template>
