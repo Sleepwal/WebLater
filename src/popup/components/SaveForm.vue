@@ -2,20 +2,24 @@
 import { ref } from 'vue'
 import { useGroups } from '../composables/useGroups'
 import CreateGroupInput from './CreateGroupInput.vue'
+import TagSelector from './TagSelector.vue'
 
 const props = defineProps<{
   selectedGroupId: string
+  selectedTags?: string[]
   isSaved?: boolean
 }>()
 
 const emit = defineEmits<{
   'update:selectedGroupId': [value: string]
+  'update:selectedTags': [value: string[]]
   save: []
 }>()
 
 const { groups, loadGroups, createGroup } = useGroups()
 const newGroupName = ref('')
 const isCreatingGroup = ref(false)
+const tags = ref<string[]>(props.selectedTags || [])
 
 loadGroups()
 
@@ -28,35 +32,36 @@ async function handleCreateGroup() {
 }
 
 function handleSave() {
+  emit('update:selectedTags', tags.value)
   emit('save')
 }
 </script>
 
 <template>
-  <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+  <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
     <div class="mb-3">
-      <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">标题</label>
+      <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">标题</label>
       <slot name="title" />
     </div>
 
     <div class="mb-3">
-      <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">链接</label>
+      <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">链接</label>
       <slot name="url" />
     </div>
 
-    <div class="mb-4">
-      <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">分组</label>
+    <div class="mb-3">
+      <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">分组</label>
       <div class="flex gap-2">
         <select
           :value="selectedGroupId"
           @change="emit('update:selectedGroupId', ($event.target as HTMLSelectElement).value)"
-          class="flex-1 rounded-lg border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-sm p-2.5"
+          class="flex-1 rounded-lg border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:bg-white dark:focus:bg-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 transition-all text-sm p-2.5 dark:text-white"
         >
           <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
         </select>
         <button
           @click="isCreatingGroup = !isCreatingGroup"
-          class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-600 transition-colors"
+          class="px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg text-gray-600 dark:text-gray-300 transition-colors"
           title="新建分组"
         >
           +
@@ -70,7 +75,12 @@ function handleSave() {
       />
     </div>
 
-    <div v-if="isSaved" class="mb-4 p-3 bg-blue-50 text-blue-700 rounded-lg text-sm flex items-center gap-2 border border-blue-100">
+    <div class="mb-4">
+      <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">标签</label>
+      <TagSelector v-model="tags" />
+    </div>
+
+    <div v-if="isSaved" class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-sm flex items-center gap-2 border border-blue-100 dark:border-blue-800">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 flex-shrink-0">
         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
       </svg>
@@ -83,7 +93,7 @@ function handleSave() {
       class="w-full font-medium py-2.5 rounded-lg transition-all text-white"
       :class="[
         isSaved 
-          ? 'bg-gray-300 cursor-not-allowed' 
+          ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed' 
           : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg active:scale-[0.98]'
       ]"
     >

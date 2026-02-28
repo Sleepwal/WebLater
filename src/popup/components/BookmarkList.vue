@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { useBookmarks } from '../composables/useBookmarks'
 import { useGroups } from '../composables/useGroups'
+import { useSearch } from '../composables/useSearch'
 import { ref, computed, watch } from 'vue'
+import type { SortOptions as SortOptionsType, ReadStatusFilter as ReadStatusFilterType } from '../../types'
 import GroupFilter from './GroupFilter.vue'
 import BookmarkItem from './BookmarkItem.vue'
 import GroupModal from './GroupModal.vue'
+import SortOptionsComponent from './SortOptions.vue'
+import TagFilter from './TagFilter.vue'
+import ReadStatusFilterComponent from './ReadStatusFilter.vue'
 
 const props = defineProps<{
   filterGroupId: string
@@ -15,12 +20,15 @@ const emit = defineEmits<{
   (e: 'notify', message: string, type: 'success' | 'error'): void
 }>()
 
-const { bookmarks: allBookmarks, loadBookmarks, removeBookmark, updateBookmark } = useBookmarks()
+const { bookmarks: allBookmarks, loadBookmarks, removeBookmark, updateBookmark, toggleReadStatus, sortBookmarks, filterByReadStatus } = useBookmarks()
 const { groups, loadGroups, getGroupName } = useGroups()
+const { searchQuery, searchBookmarks } = useSearch()
 
 const isGroupModalOpen = ref(false)
+const sortOptions = ref<SortOptionsType>({ type: 'createdAt', order: 'desc' })
+const readStatusFilter = ref<ReadStatusFilterType>('all')
+const selectedTags = ref<string[]>([])
 
-// 如果当前筛选的分组被删除了，重置筛选到“全部”
 watch(groups, (newGroups) => {
   if (props.filterGroupId !== 'all' && !newGroups.find(g => g.id === props.filterGroupId)) {
     emit('update:filterGroupId', 'all')
@@ -29,9 +37,24 @@ watch(groups, (newGroups) => {
 
 const filteredBookmarks = computed(() => {
   let list = allBookmarks.value
+
+  if (searchQuery.value.trim()) {
+    list = searchBookmarks(list, searchQuery.value)
+  }
+
   if (props.filterGroupId !== 'all') {
     list = list.filter(b => b.groupId === props.filterGroupId)
   }
+
+  if (selectedTags.value.length > 0) {
+    list = list.filter(b => 
+      selectedTags.value.every(tag => b.tags?.includes(tag))
+    )
+  }
+
+  list = filterByReadStatus(list, readStatusFilter.value)
+  list = sortBookmarks(list, sortOptions.value)
+
   return list
 })
 
@@ -59,6 +82,14 @@ async function handleMove(id: string, newGroupId: string) {
   }
 }
 
+async function handleToggleRead(id: string) {
+  try {
+    await toggleReadStatus(id)
+  } catch (error) {
+    emit('notify', '操作失败', 'error')
+  }
+}
+
 function openLink(url: string) {
   if (typeof chrome !== 'undefined' && chrome.tabs) {
     chrome.tabs.create({ url })
@@ -70,12 +101,17 @@ function openLink(url: string) {
 
 <template>
   <div class="space-y-4">
-    <GroupFilter
-      :groups="groups"
-      :filterGroupId="filterGroupId"
-      @update:filterGroupId="emit('update:filterGroupId', $event)"
-      @manage="isGroupModalOpen = true"
-    />
+    <div class="flex flex-wrap gap-2 items-center">
+      <GroupFilter
+        :groups="groups"
+        :filterGroupId="filterGroupId"
+        @update:filterGroupId="emit('update:filterGroupId', $event)"
+        @manage="isGroupModalOpen = true"
+      />
+      <TagFilter v-model="selectedTags" />
+      <ReadStatusFilterComponent v-model="readStatusFilter" />
+      <SortOptionsComponent v-model:sortOptions="sortOptions" />
+    </div>
 
     <GroupModal
       v-if="isGroupModalOpen"
@@ -83,7 +119,7 @@ function openLink(url: string) {
       @notify="(msg, type) => emit('notify', msg, type)"
     />
 
-    <div v-if="filteredBookmarks.length === 0" class="text-center py-10 text-gray-400">
+    <div v-if="filteredBookmarks.length === 0" class="text-center py-10 text-gray-400 dark:text-gray-500">
       <p>暂无链接</p>
     </div>
 
@@ -97,6 +133,7 @@ function openLink(url: string) {
         @click="openLink"
         @delete="handleDelete"
         @move="handleMove"
+        @toggle-read="handleToggleRead"
       />
     </div>
   </div>

@@ -54,9 +54,54 @@ async function setData(data: Partial<StorageSchema>): Promise<void> {
   await chrome.storage.local.set(data);
 }
 
+const VALID_KEYS = ['bookmarks', 'groups', 'settings', 'backups', 'searchHistory'] as const
+type ValidKey = typeof VALID_KEYS[number]
+
+function validateStorageData(data: Partial<StorageSchema>): { valid: boolean; errors: string[] } {
+  const errors: string[] = []
+
+  for (const key of Object.keys(data)) {
+    if (!VALID_KEYS.includes(key as ValidKey)) {
+      errors.push(`Invalid key: ${key}`)
+    }
+  }
+
+  if (data.bookmarks !== undefined && !Array.isArray(data.bookmarks)) {
+    errors.push('bookmarks must be an array')
+  }
+
+  if (data.groups !== undefined && !Array.isArray(data.groups)) {
+    errors.push('groups must be an array')
+  }
+
+  if (data.settings !== undefined && typeof data.settings !== 'object') {
+    errors.push('settings must be an object')
+  }
+
+  if (data.backups !== undefined && !Array.isArray(data.backups)) {
+    errors.push('backups must be an array')
+  }
+
+  if (data.searchHistory !== undefined && !Array.isArray(data.searchHistory)) {
+    errors.push('searchHistory must be an array')
+  }
+
+  return { valid: errors.length === 0, errors }
+}
+
 export const storage = {
   async get(): Promise<StorageSchema> {
     return getData();
+  },
+
+  async set(data: Partial<StorageSchema>): Promise<{ success: boolean; errors?: string[] }> {
+    const validation = validateStorageData(data)
+    if (!validation.valid) {
+      console.error('Storage validation failed:', validation.errors)
+      return { success: false, errors: validation.errors }
+    }
+    await setData(data);
+    return { success: true }
   },
 
   async addBookmark(bookmark: Omit<Bookmark, 'id' | 'createdAt'>): Promise<Bookmark> {
@@ -65,6 +110,11 @@ export const storage = {
       ...bookmark,
       id: generateUUID(),
       createdAt: Date.now(),
+      tags: bookmark.tags || [],
+      isRead: bookmark.isRead ?? false,
+      notes: bookmark.notes || '',
+      order: bookmark.order || 0,
+      updatedAt: Date.now()
     };
     
     const bookmarks = [newBookmark, ...data.bookmarks];
